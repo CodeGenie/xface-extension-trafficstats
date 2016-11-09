@@ -31,7 +31,12 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
+/* import android.app.usage.NetworkStats; */
+/* import android.app.usage.NetworkStatsManager; */
 import android.net.TrafficStats;
+import java.util.List;
+import android.graphics.drawable.Drawable;
+
 /**
  * 流量统计类，负责对mobile、wifi、noNetwork流量进行统计，其中包含了3个内部类，
  * 分别统计不同类型的流量，同时在网络类型切换时，更新相应的流量统计
@@ -176,6 +181,59 @@ public class XTrafficStats {
         mCurrentNetworkState.updateTraffic();
         return mMobileTraffic.getTraffic() / CONST_NUM;
     }
+	
+	public String getPackageUsageFromBoot(){
+		String output = "";
+
+        PackageManager pm = mContext.getPackageManager();
+
+        // get a list of installed apps.
+        List<ApplicationInfo> packages = pm.getInstalledApplications(0);
+
+        // loop through the list of installed packages and see if the selected
+        // app is in the list
+        for (ApplicationInfo packageInfo : packages) {
+            String package_name = packageInfo.packageName;
+            ApplicationInfo app = null;
+
+            try {
+                app = pm.getApplicationInfo(package_name, 0);
+            } catch (NameNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            String name = (String) pm.getApplicationLabel(app);
+            Drawable icon = pm.getApplicationIcon(app);
+
+            // internet usage for particular app(sent and received)
+            double received = (double) TrafficStats.getUidRxBytes(packageInfo.uid);
+            double send = (double) TrafficStats.getUidTxBytes(packageInfo.uid);
+            double total = received + send;
+
+            if(total > 0){
+            	output = output + package_name + ";;" + packageInfo.uid + ";;" + name + ";;" + received + ";;" + send + ";;;";
+            }
+        }
+
+        return output;
+	}
+
+/*
+	public List getPackageUsage(){
+		Calendar beginCal = Calendar.getInstance();
+        beginCal.set(Calendar.DATE, 1);
+        beginCal.set(Calendar.MONTH, 2);
+        beginCal.set(Calendar.YEAR, 2016);
+
+        Calendar endCal = Calendar.getInstance();
+        endCal.set(Calendar.DATE, 1);
+        endCal.set(Calendar.MONTH, 3);
+        endCal.set(Calendar.YEAR, 2016);
+
+        final List<NetworkStats> list = NetworkStatsManager.querySummary (NetworkStatsManager.TYPE_MOBILE, null, beginCal.getTimeInMillis(), endCal.getTimeInMillis());
+
+		return list;
+	}*/
 
     /**
      * 负责统计Wifi使用的流量

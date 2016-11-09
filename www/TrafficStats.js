@@ -55,4 +55,21 @@
     exec(successCallback, errorCallback, "TrafficStats", "getWifiTraffic", []);
   };
 
+
+TrafficStats.prototype.getPackageUsage = function(successCallback, errorCallback){
+    argscheck.checkArgs('fF','TrafficStats.getPackageUsage', arguments);
+    exec(function(dataString){
+        //return successCallback(dataString);
+        var packages = {}, t = String(dataString).split(';;;'), k, v;
+        for(k in t){
+            v = t[k].split(';;');
+            v = {package:v[0], uid:parseInt(v[1]), name:v[2], received:parseFloat(v[3]), sent:parseFloat(v[4])};
+            v.total = v.sent + v.received;
+            packages[v.package] = v;
+        }
+        delete packages[''];
+        successCallback(packages);
+    }, errorCallback, 'TrafficStats', 'getPackageUsage', []);
+};
+
   module.exports = new TrafficStats();
